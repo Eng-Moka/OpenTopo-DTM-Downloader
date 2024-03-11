@@ -30,11 +30,11 @@ global_raster_datasets = ['SRTMGL3',  'SRTMGL1',    'SRTMGL1_E', 'AW3D30',
 
 YOUR_API_CODE = 'YOUR_API_KEY' # Replace with your own API code from the OpenTopography website.
 DATASET_SOURCE_ID = 1 # replace with NEDED dataset ID in reang [0-10].
-YOUR_FEATUER_CLASS = r'PATH\TO\YOUR\FEATUERCLASS'  # replace with path to your locations feature class 
+YOUR_FEATUER_CLASS = r'PATH\TO\YOUR\FEATUERCLASS'  # replace with path to your locations feature class or ShapeFile
 YOUR_OUTPUT_FOLDER = r'PATH\TO\YOUR\OUTPUTFOLDER'  # Define output directory here.
-DTM_NAMES_FIELD =  "DTM_Name"  # Name of field that contains names for each location
+DTM_NAMES_FIELD =  "DTM_NAME"  # Name of field that contains names for each location
 BUFFER = 000   # Buffer around points to be used when downloading data,In your featuer class crs units.
-               # unnecessary if  you are using polygon features.
+               # unnecessary if you are using polygon features.
 
 #-----------------------------------------------------------------------------------
 
@@ -103,33 +103,37 @@ def  featuer_bound_to_DTM(featuer_bounds):
     for index, row  in featuer_bounds.iterrows():
         # boundary = south, north, west, east 
         boundary = (row['miny'], row['maxy'], row['minx'], row['maxx'])
+        # create a DTM filename based on the feature name field
+        dtm_file_name = str(row[DTM_NAMES_FIELD]) + "_DTM.tif"
+        dtm_file_path = os.path.join(YOUR_OUTPUT_FOLDER , dtm_file_name)
         # get the binary data of DTM file from OpenTopography API
         data = get_DTM_data(YOUR_API_CODE,DATASET_SOURCE_ID,boundary)
         # if there is no data skip this iteration and move to next feature
         if not data:
             print(f'Error at file: {dtm_file_path}')
             continue
-        # create a DTM filename based on the feature name field
-        dtm_file_name = str(row[DTM_NAMES_FIELD]) + "_DTM.tif"
-        dtm_file_path = os.path.join(YOUR_OUTPUT_FOLDER , dtm_file_name)
+        
         # write the binary data into the corresponding DTM file
-        return make_DTM_file(dtm_file_path, data)
+        make_DTM_file(dtm_file_path, data)
 
             
 
 if '__main__' == __name__:
     
-    layer = os.path.basename(YOUR_FEATUER_CLASS)  # get the featuerclass name
+    featuer = gpd.GeoDataFrame()
     
-    GDB = YOUR_FEATUER_CLASS.split('gdb')[0] + 'gdb'  # get the fileGDB path
-    
-    featuer = gpd.read_file(GDB,layer=layer)  # read feature class from  geodatabase
+    if YOUR_FEATUER_CLASS.lower().endswith('.shp'):
+        featuer = gpd.read_file(YOUR_FEATUER_CLASS, driver="ESRI Shapefile")
+    elif '.gdb' in YOUR_FEATUER_CLASS.lower():
+        GDB = YOUR_FEATUER_CLASS.split('gdb')[0] + 'gdb'  # get the fileGDB path
+        layer = os.path.basename(YOUR_FEATUER_CLASS)  # get the featuerclass name
+        featuer = gpd.read_file(GDB,layer=layer)  # read feature class from  geodatabase
     
     featuer = featuer.buffer(BUFFER) if BUFFER > 0 else  featuer  # Apply buffer if have one
     
-    buffer_featuer_to_WGS = featuer.to_crs('4326')  # convert to WGS84 geographic coordinate system
+    featuer = featuer.to_crs('4326')  # convert to WGS84 geographic coordinate system
     
-    featuer_bounds = buffer_featuer_to_WGS.bounds  # calculate bounds of each features and save it into a DataFrame
+    featuer_bounds = featuer.bounds  # calculate bounds of each features and save it into a DataFrame
     
     featuer_bounds[DTM_NAMES_FIELD] = featuer[DTM_NAMES_FIELD]  # copy the DTM_NAMES  field to new column NAME_WITH_EXTENSION
     
