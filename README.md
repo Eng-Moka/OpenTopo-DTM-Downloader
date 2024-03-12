@@ -9,7 +9,7 @@ The script utilizes the `requests` library to interact with the API and `geopand
 Before using this script, ensure you have the following:
 
 - Python installed on your system (preferably version 3.x).
-- Required Python libraries installed (`requests`, `geopandas`).
+- Required Python libraries installed (`requests-2.31.0`, `geopandas-0.14.3`).
 - An API code obtained from the OpenTopography website. If you don't have one, you can sign up for free on their website to obtain it.
 
 
