@@ -32,7 +32,7 @@ Link : https://opentopography.org
 
 ## Script Explanation
 
-- `download_DTM_data.py`: This script is the main Python script. It contains functions for interacting with the OpenTopography API to download DTM data based on specified geographic locations or bounding boxes. The script fetches data in GeoTIFF format and saves it to the specified output directory.
+- `OpenTopo-DTM-Downloader.py`: This script is the main Python script. It contains functions for interacting with the OpenTopography API to download DTM data based on specified geographic locations or bounding boxes. The script fetches data in GeoTIFF format and saves it to the specified output directory.
 
 ## Parameters
 
